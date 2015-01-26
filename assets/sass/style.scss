@@ -1,3 +1,5 @@
+@import "normalize";
+@import "skeleton";
 // Font
 $pt-sans-ff: "PT Sans", sans-serif;
 $open-sans-ff: "Open Sans", sans-serif;
@@ -24,9 +26,6 @@ $funky-red-dark: #8F2448;
 
 // Base settings
 body {
-	font-family: Monaco,'Courier New',monospace;
-	font-family: $lato-ff;
-	font-family: $pt-sans-ff;
 	font-family: $robotodraft-ff;
 	font-weight: 300;
 	background-color: #fafafa;
