@@ -55,16 +55,25 @@
 	</div>
 	<div class="row">
 		<div class="one-third column work-item">
+			<div class="gallery">
+				<a href="assets/images/sb-1.png" data-caption="1 of 3"><img src="assets/images/sb.png" class="placeholder"></a>
+				<a href="assets/images/sb-3.png" data-caption="1 of 3"></a>
+				<a href="assets/images/sb-2.png" data-caption="1 of 3"></a>
+			</div>
+			<h3>Student Bookshelf</h3>
+			<p>Ecommerce website for Christchurch retailer Student Bookshelf, including a modified theme and custom admin functionality.</p>
+			<p>Built with OpenCart and PHP</p>
+			<div class="gallery">
+				<a href="assets/images/sb-1.png" data-caption="1 of 3">View site</a>
+				<a href="assets/images/sb-3.png" data-caption="1 of 3"></a>
+				<a href="assets/images/sb-2.png" data-caption="1 of 3"></a>
+			</div>
+		</div>
+		<div class="one-third column work-item">
 			<a href="#!"><img src="assets/images/context.png" class="placeholder"></a>
 			<h3>Context Architects</h3>
 			<p>A responsive email template, with support for a wide rande of email clients.</p>
 			<a href="#!">View template</a>
-		</div>
-		<div class="one-third column work-item">
-			<a href="#!"><img src="assets/images/sb.png" class="placeholder"></a>
-			<h3>Student Bookshelf</h3>
-			<p>Ecommerce website for Christchurch retailer Student Bookshelf, including a modified theme and custom admin functionality.</p>
-			<a href="#!">View site</a>
 		</div>
 		<div class="one-third column work-item">
 			<a href="#!"><img src="assets/images/wet_weather.png" class="placeholder"></a>
@@ -110,6 +119,14 @@
 	</section>
 </div>
 
+<link rel="stylesheet" href="assets/css/baguetteBox.min.css">
+<script src="assets/js/baguetteBox.min.js"></script>
+<script>
+window.onload = function() {
+    baguetteBox.run('.gallery', {
 
+    });
+};
+</script>
 </body>
 </html>
