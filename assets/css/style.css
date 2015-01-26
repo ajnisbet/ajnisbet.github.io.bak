@@ -1,9 +1,6 @@
 .container {
   max-width: 1100px; }
 
-img.placeholder {
-  width: 100%; }
-
 body {
   font-family: Monaco,'Courier New',monospace;
   font-family: "Lato", sans-serif;
@@ -23,6 +20,9 @@ a, a:visited {
 
 a:hover, a:active {
   color: #8f2448; }
+
+img {
+  max-width: 100%; }
 
 .bg {
   background-color: #1f2036;
@@ -87,8 +87,10 @@ ul.nav > li a:hover {
 
 .site-image img {
   display: inline-block;
-  width: 750px;
-  margin-bottom: -20px; }
+  max-width: 550px;
+  width: 100%;
+  margin-bottom: -20px;
+  margin-top: 6rem; }
 
 h2 {
   font-size: 50px;
@@ -122,3 +124,18 @@ h3 {
 
 .contact a:hover {
   text-decoration: underline; }
+
+@media (max-width: 750px) {
+  h1 br {
+    display: none; } }
+@media (max-width: 550px) {
+  .top-bar {
+    text-align: center; }
+
+  .logotype {
+    margin: 0 0 20px;
+    float: none;
+    font-size: 4.5rem; }
+
+  ul.nav {
+    float: none; } }
