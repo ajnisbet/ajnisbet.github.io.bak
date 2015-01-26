@@ -18,11 +18,20 @@ h1 {
 h2, h3, h4, h5, h6 {
   font-family: "Montserrat", sans-serif; }
 
+a, a:visited {
+  color: #cc3367; }
+
+a:hover, a:active {
+  color: #8f2448; }
+
 .bg {
   background-color: #1f2036;
   background: radial-gradient(at bottom, #2c2d43 5%, #1f2036 60%);
   color: white;
   overflow: hidden; }
+
+.bg-upside-down {
+  background: radial-gradient(at top, #2c2d43 5%, #1f2036 60%); }
 
 .nav-bg {
   background-color: #151515;
@@ -66,6 +75,9 @@ ul.nav > li a {
   color: inherit;
   text-decoration: none; }
 
+ul.nav > li a:hover {
+  color: #cc3367; }
+
 .intro {
   text-align: center;
   margin-top: 6rem; }
@@ -97,6 +109,16 @@ h3 {
 .work-item {
   margin-bottom: 6rem; }
 
+.what-i-do {
+  padding-bottom: 10rem; }
+
 .contact {
   text-align: center;
-  padding-bottom: 5%; }
+  padding-bottom: 10rem; }
+
+.contact a {
+  color: inherit;
+  text-decoration: none; }
+
+.contact a:hover {
+  text-decoration: underline; }
