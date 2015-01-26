@@ -1,0 +1,555 @@
+<!doctype html>
+<head>
+
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="description" content="Weather data visualisation.">
+	<meta name="author" content="ajnisbet@gmail.com">
+	<meta name="robots" content="noindex">
+
+	<title>Raglan Weather - WetWeather</title>
+
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+	<link rel="stylesheet" href="assets/css/ww_style.css">
+	<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=PT+Sans:400,700|Open+Sans:400,300'>
+
+	<script src="assets/js/d3.js"></script>
+	<script src="assets/js/topojson.js"></script>
+	<script src="assets/js/d3.tip.js"></script>
+
+	<!--[if lt IE 9]>
+		<script src="assets/js/html5shiv.min.js"></script>
+	<![endif]-->
+
+</head>
+<body>
+
+	<div class="navbar navbar-static-top">
+		<div class="container">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="#!">
+					<span class="logotype">WetWeather</span>
+				</a>
+			</div>
+		</div>
+	</div>
+
+	<div class="container">
+		
+		<div class="col-xs-9">
+			<div class="row">
+				<div class="col-xs-12">
+					<div class="holder">
+						<h2>Temperature</h2>
+						<div class="value">18.9<span class="unit">°C</span></div>
+						<div class="chart-area">
+							<div id="temperature-chart"></div>
+						</div>
+					</div>
+				</div>
+				<div class="col-xs-12">
+					<div class="holder">
+						<h2>Swell</h2>
+						<div class="value">1.0<span class="unit">m</span></div>
+						<div class="chart-area">
+							<div id="swell-chart"></div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="col-xs-12">
+					<div class="holder">
+						<h2>Wind</h2>
+						<div class="value">12<span class="unit">kn</span></div>
+						<div class="chart-area">
+							<div id="wind-chart"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+		<div class="col-xs-3">
+			<div class="row">
+				
+			<div class="col-xs-12">
+				<div class="holder">
+					<h2>Time</h2>
+					<div class="value">04:00<span class="unit">am</span></div>
+					<div class="date">Tuesday 18 February</div>
+				</div>
+				<div class="holder">
+					<h2>Location</h2>
+					<div class="value">Raglan</div>
+					<div class="date">New Zealand, UTC+12</div>
+					<div id="map-chart"></div>
+				</div>
+				<div class="holder">
+					<h2>Documentation</h2>
+					<div class="value"><a href="https://bitbucket.org/ajnisbet/ocean-data-visualisation/">bitbucket</a></div>
+				</div>
+			</div>
+			</div>
+		</div>
+
+
+		
+
+		
+
+	</div>
+
+	<script>
+		// Return the compas wind direction based on the wind angle
+		var wind_direction = function(dir) {
+			var dirs = ["N", "NW", "W", "SW", "S", "SE", "S", "NE"];
+			dir = dir % 360;
+			var index = Math.floor(dir / (360 / dirs.length));
+			return dirs[index];
+		};
+
+	</script>
+
+
+	<script>
+		// NZ Map
+		var map_width = 350, map_height = 400;
+		var map_svg = d3.select("#map-chart")
+			.append("svg")
+			.attr("width", map_width)
+			.attr("height", map_height)
+
+		var projection = d3.geo.transverseMercator()
+			.scale(1500)
+			.rotate([188,40.5])
+			.translate([map_width/2-(map_width*0.05), map_height/2]); // Adjust left to visually centre map
+
+		var map_path = d3.geo.path()
+			.projection(projection)
+			.pointRadius(3);
+
+		var coordinates = projection([174.871794, -37.801285]);
+
+		d3.json("assets/js/nz-topo.json",function (mapData) {
+
+			map_svg.selectAll("path")
+				.data(topojson.feature(mapData, mapData.objects.nzl_subunits).features)
+				.enter()
+				.append("path")
+				.attr("d", map_path)
+				.attr("class", function (d) {return d.id;});
+
+			map_svg.append('svg:circle')
+				.attr('cx', coordinates[0])
+				.attr('cy', coordinates[1])
+				.attr('r', 7.5)
+				.attr("class", "marker");
+		});
+
+	</script>
+	<script>
+		// Dimensions of large plots
+		var margin = {top: 20, right: 20, bottom: 100, left: 100},
+			width = 1000 - margin.left - margin.right,
+			height = 500 - margin.top - margin.bottom;
+
+		// Parse metocean date format
+		var parseDate = d3.time.format("%Y-%m-%d %H:%M:%S").parse;
+
+	</script>
+	<script>
+		// Temperature plot
+		var x_temp = d3.time.scale()
+			.range([0, width]);
+
+		var y_temp = d3.scale.linear()
+			.nice()
+			.range([height, 0]);
+
+
+		var xAxis_temp1 = d3.svg.axis()
+			.scale(x_temp)
+			.orient("bottom")
+			.tickFormat(function(d) {
+				if (d.getHours() == 12) {
+					return d3.time.format("%A")(d);
+				} else {
+					return "";
+					
+				}
+			})
+			.ticks(d3.time.hour, 12)
+			.innerTickSize(-height)
+			.outerTickSize(0)
+			.tickPadding(30);
+
+
+		var xAxis_temp2 = d3.svg.axis()
+			.scale(x_temp)
+			.orient("bottom")
+			.tickFormat(function(d) {
+				if (d.getHours() == 12) {
+					return "noon";
+				} else {
+					return d3.time.format("%I%p")(d);
+					
+				} 
+			})
+			.ticks(d3.time.hour, 6)
+			.innerTickSize(-height)
+			.outerTickSize(0)
+			.tickPadding(10);
+
+
+		var yAxis_temp = d3.svg.axis()
+			.scale(y_temp)
+			.ticks(5)
+			.orient("left")
+			.tickPadding(10)
+			.tickSize(1);
+
+		var line_temp = d3.svg.line()
+			.interpolate("basis")   
+			.x(function(d) { return x_temp(d.Time); })
+			.y(function(d) { return y_temp(d.tmp); });
+
+		var svg_temp = d3.select("#temperature-chart").append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+			.append("g")
+			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+		d3.tsv("assets/data/combined.tsv", function(error, data) {
+			data.forEach(function(d) {
+				d.Time = parseDate(d.Time);
+				d.forecast = d.forecast;
+			});
+
+			// Only do the last 3 days
+			var latest_date = Math.max.apply(Math, data.map(function(d) {
+				return d.Time;
+			}));
+			var earliest_date = latest_date - 3*24*60*60*1000;
+			data = data.filter(function(d) {
+				return d.Time > earliest_date;
+			});
+
+			data_real = data.filter(function(d) {
+				return d.forecast  == 0;
+			});
+			data_forecast = data.filter(function(d) {
+				return d.forecast  == 1;
+			});
+			data_forecast.unshift(data_real[data_real.length-1])
+
+			x_temp.domain(d3.extent(data, function(d) { return d.Time; }));
+			var yMin = Math.min.apply(Math, data.map(function(v) { return v.tmp; })) - 1;
+			var yMax = Math.max.apply(Math, data.map(function(v) { return v.tmp; })) + 1;
+			console.log(yMin, yMax);
+			y_temp.domain([yMin, yMax]);
+
+			svg_temp.append("g")
+				.attr("class", "x axis major")
+				.attr("transform", "translate(0," + height + ")")
+				.call(xAxis_temp1);
+
+			svg_temp.append("g")
+				.attr("class", "x axis minor")
+				.attr("transform", "translate(0," + height + ")")
+				.call(xAxis_temp2);
+
+			svg_temp.append("g")
+				.attr("class", "y axis")
+				.call(yAxis_temp)
+				.append("text");
+
+
+			svg_temp.append("path")
+				.datum(data_real)
+				.attr("class", "line")
+				.attr("d", line_temp);
+
+			svg_temp.append("path")
+				.datum(data_forecast)
+				.attr("class", "line")
+				.style("stroke-dasharray", ("3, 3"))
+				.attr("d", line_temp);
+		});
+
+	</script>
+	<script>
+		// Temperature plot
+
+		var x_swell = d3.scale.ordinal()
+			.rangeRoundBands([0, width], .1);
+
+		var y_swell = d3.scale.linear()
+			.nice()
+			.range([height, 0]);
+
+		var xAxis_swell1 = d3.svg.axis()
+			.scale(x_swell)
+			.tickFormat(function(d) {
+				if (d.getHours() == 12) {
+					return d3.time.format("%A")(d);
+				} else {
+					return "";
+					
+				}
+			})
+			.orient("bottom")
+			.ticks(d3.time.hour, 12)
+			.tickSize(0)
+			.tickPadding(30);
+
+		var xAxis_swell2 = d3.svg.axis()
+			.scale(x_swell)
+			.tickFormat(function(d) {
+				if (d.getHours() == 12) {
+					return "noon";
+				} else if (d.getHours()%6 === 0) {
+					return d3.time.format("%I%p")(d);
+				} else {
+					return "";
+				}
+			})
+			.ticks(d3.time.hour, 6)
+			.orient("bottom")
+			.tickSize(0)
+			.tickPadding(10);
+
+		var yAxis_swell = d3.svg.axis()
+			.scale(y_swell)
+			.orient("left")
+			.ticks(5)
+			.orient("left")
+			.tickPadding(10)
+			.tickSize(1);
+
+		var tip_swell = d3.tip()
+			.attr('class', 'd3-tip')
+			.offset([-10, 0])
+			.html(function(d) {
+				pretty_date_format = d3.time.format("%I:%M%p %A")
+				return "<strong>swell:</strong> " + d.swl + "<span class=\"unit\">m</span></span><br><span class=\"tip-date\">" + pretty_date_format(d.Time)+ "</span";
+			})
+
+		var svg_swell = d3.select("#swell-chart").append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+			.append("g")
+			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+		svg_swell.call(tip_swell);
+
+		d3.tsv("assets/data/combined.tsv", type, function(error, data) {
+			data.forEach(function(d) {
+				d.Time = parseDate(d.Time);
+				d.swl = d.hs_sw1;
+			});
+
+			// Only do the last n days
+			var latest_date = Math.max.apply(Math, data.map(function(d) {
+				return d.Time;
+			}));
+			var earliest_date = latest_date - 3*24*60*60*1000;
+			data = data.filter(function (d) {
+				return d.Time > earliest_date;
+			});
+
+
+			x_swell.domain(data.map(function(d) { return d.Time; }));
+			y_swell.domain([0, d3.max(data, function(d) { return d.swl; })]);
+
+			svg_swell.append("g")
+				.attr("class", "x axis")
+				.attr("transform", "translate(0," + height + ")")
+				.call(xAxis_swell1);
+
+			svg_swell.append("g")
+				.attr("class", "x axis")
+				.attr("transform", "translate(0," + height + ")")
+				.call(xAxis_swell2);
+
+		  	svg_swell.append("g")
+				.attr("class", "y axis")
+				.call(yAxis_swell)
+				.append("text")
+				.attr("transform", "rotate(-90)")
+				.attr("y", 6)
+				.attr("dy", ".71em")
+				.style("text-anchor", "end")
+
+		  	svg_swell.selectAll(".bar")
+				.data(data)
+				.enter().append("rect")
+				.attr("class", function(d) {
+					if (d.forecast == 1) {
+						return "bar forecast";
+					} else {
+						return "bar";
+					}
+				})
+				.style("stroke-dasharray", function(d) {
+					if (d.forecast == 1) {
+						return ("1, 1");
+					} else {
+						return ("0, 0");
+					}
+				})
+				// .style("stroke-dasharray", ("1, 1"))
+				.attr("x", function(d) { return x_swell(d.Time); })
+				// .attr("width", x_swell.rangeBand())
+				.attr("width", width/data.length-4)
+				.attr("y", function(d) { return y_swell(d.swl); })
+				.attr("height", function(d) { return height - y_swell(d.swl); })
+				.on('mouseover', tip_swell.show)
+				.on('mouseout', tip_swell.hide)
+
+		});
+
+		function type(d) {
+		  d.frequency = +d.frequency;
+		  return d;
+		}
+
+
+	</script>
+
+	<script>
+
+
+
+			var x_wind = d3.scale.ordinal()
+				.rangeRoundBands([0, width], .1);
+
+			var y_wind = d3.scale.linear()
+				.nice()
+				.range([height, 0]);
+
+			var xAxis_wind1 = d3.svg.axis()
+				.scale(x_wind)
+				.tickFormat(function(d) {
+					if (d.getHours() == 12) {
+						return d3.time.format("%A")(d);
+					} else {
+						return "";
+						
+					}
+				})
+				.orient("bottom")
+				.ticks(d3.time.hour, 12)
+				.tickSize(0)
+				.tickPadding(30);
+
+			var xAxis_wind2 = d3.svg.axis()
+				.scale(x_wind)
+				.tickFormat(function(d) {
+					if (d.getHours() == 12) {
+						return "noon";
+					} else if (d.getHours()%6 === 0) {
+						return d3.time.format("%I%p")(d);
+					} else {
+						return "";
+					}
+				})
+				.ticks(d3.time.hour, 6)
+				.orient("bottom")
+				.tickSize(0)
+				.tickPadding(10);
+
+			var yAxis_wind = d3.svg.axis()
+				.scale(y_wind)
+				.orient("left")
+				.ticks(5)
+				.orient("left")
+				.tickPadding(10)
+				.tickSize(1);
+
+			var tip_wind = d3.tip()
+				.attr('class', 'd3-tip')
+				.offset([-10, 0])
+				.html(function(d) {
+					pretty_date_format = d3.time.format("%I:%M%p %A")
+					return "<strong>windspeed:</strong> " + d.wsp + "<span class=\"unit\">kn</span></span><br><strong>direction:</strong> " + wind_direction(d.wd) + "<br><span class=\"tip-date\">" + pretty_date_format(d.Time)+ "</span";
+				})
+
+			var svg_wind = d3.select("#wind-chart").append("svg")
+				.attr("width", width + margin.left + margin.right)
+				.attr("height", height + margin.top + margin.bottom)
+				.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+			svg_wind.call(tip_wind);
+
+			d3.tsv("assets/data/combined.tsv", type, function(error, data) {
+				data.forEach(function(d) {
+					d.Time = parseDate(d.Time);
+					d.wsp = d.wsp;
+					d.wd = d.wd;
+				});
+
+				// Only do the last n days
+				var latest_date = Math.max.apply(Math, data.map(function(d) {
+					return d.Time;
+				}));
+				var earliest_date = latest_date - 3*24*60*60*1000;
+				data = data.filter(function (d) {
+					return d.Time > earliest_date;
+				});
+
+
+				x_wind.domain(data.map(function(d) { return d.Time; }));
+				y_wind.domain([0, d3.max(data, function(d) { return d.wsp; })]);
+
+				svg_wind.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height + ")")
+					.call(xAxis_wind1);
+
+				svg_wind.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height + ")")
+					.call(xAxis_wind2);
+
+			  	svg_wind.append("g")
+					.attr("class", "y axis")
+					.call(yAxis_wind)
+					.append("text")
+					.attr("transform", "rotate(-90)")
+					.attr("y", 6)
+					.attr("dy", ".71em")
+					.style("text-anchor", "end")
+
+			  	svg_wind.selectAll(".bar")
+					.data(data)
+					.enter().append("rect")
+					.attr("class", function(d) {
+						if (d.forecast == 1) {
+							return "bar forecast";
+						} else {
+							return "bar";
+						}
+					})
+					.style("stroke-dasharray", function(d) {
+						if (d.forecast == 1) {
+							return ("1, 1");
+						} else {
+							return ("0, 0");
+						}
+					})
+					.attr("x", function(d) { return x_wind(d.Time); })
+					.attr("width", width/data.length-4)
+					.attr("y", function(d) { return y_wind(d.wsp); })
+					.attr("height", function(d) { return height - y_wind(d.wsp); })
+					.on('mouseover', tip_wind.show)
+					.on('mouseout', tip_wind.hide)
+
+			});
+
+
+
+		</script>
+</body>
+</html>
