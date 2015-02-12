@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /context_email.html
+Disallow: /wet_weather.html
